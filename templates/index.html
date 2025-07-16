@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Flight Fare Predictor</title>
+  <style>
+    :root {
+      --bg-light: #ffffff;
+      --text-light: #333;
+      --bg-dark: #1e1e1e;
+      --text-dark: #f2f2f2;
+      --primary: #007bff;
+      --success: #4caf50;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: var(--bg-light);
+      color: var(--text-light);
+      transition: background 0.3s, color 0.3s;
+    }
+
+    .dark-mode {
+      background: var(--bg-dark);
+      color: var(--text-dark);
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 40px auto;
+      background: inherit;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      border: 1px solid #ccc;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+
+    select, input[type="date"] {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      background: inherit;
+      color: inherit;
+    }
+
+    button {
+      margin-top: 25px;
+      width: 48%;
+      padding: 12px;
+      font-size: 16px;
+      font-weight: bold;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .predict-btn {
+      background: var(--primary);
+      color: white;
+    }
+
+    .predict-btn:hover {
+      background: #0056b3;
+    }
+
+    .reset-btn {
+      background: #888;
+      color: white;
+    }
+
+    .reset-btn:hover {
+      background: #555;
+    }
+
+    .spinner {
+      display: none;
+      margin: 20px auto;
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid var(--primary);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+    }
+
+    .toast {
+      display: none;
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: var(--success);
+      color: white;
+      padding: 15px 20px;
+      border-radius: 6px;
+      font-weight: bold;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      z-index: 999;
+      animation: fadeInOut 4s ease-in-out forwards;
+    }
+
+    .toggle-btn {
+      position: fixed;
+      top: 15px;
+      left: 20px;
+      background: transparent;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes fadeInOut {
+      0% { opacity: 0; transform: translateY(-20px); }
+      10% { opacity: 1; transform: translateY(0); }
+      90% { opacity: 1; }
+      100% { opacity: 0; transform: translateY(-20px); }
+    }
+
+    @media (max-width: 640px) {
+      .container {
+        margin: 20px;
+        padding: 20px;
+      }
+
+      button {
+        width: 100%;
+        margin-top: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Dark mode toggle -->
+  <button class="toggle-btn" id="toggleDark">🌙</button>
+
+  <!-- Toast -->
+  <div class="toast" id="toast">Predicted Fare: ₹<span id="priceValue"></span></div>
+
+  <div class="container">
+    <h1>✈️ Flight Fare Predictor</h1>
+    <form id="predictForm">
+      <label for="airline">Airline:</label>
+      <select id="airline">
+        <option>AirAsia</option>
+        <option>Indigo</option>
+        <option>GO_FIRST</option>
+        <option>SpiceJet</option>
+        <option>Air_India</option>
+        <option>Vistara</option>
+      </select>
+
+      <label for="source_city">Source City:</label>
+      <select id="source_city">
+        <option>Delhi</option>
+        <option>Hyderabad</option>
+        <option>Bangalore</option>
+        <option>Mumbai</option>
+        <option>Kolkata</option>
+        <option>Chennai</option>
+      </select>
+
+      <label for="destination_city">Destination City:</label>
+      <select id="destination_city">
+        <option>Delhi</option>
+        <option>Hyderabad</option>
+        <option>Mumbai</option>
+        <option>Bangalore</option>
+        <option>Chennai</option>
+        <option>Kolkata</option>
+      </select>
+
+      <label for="class">Class:</label>
+      <select id="class">
+        <option>Economy</option>
+        <option>Business</option>
+      </select>
+
+      <label for="stops">Stops:</label>
+      <select id="stops">
+        <option>zero</option>
+        <option>one</option>
+        <option>two_or_more</option>
+      </select>
+
+      <label for="departure_time">Departure Time:</label>
+      <select id="departure_time">
+        <option>Early_Morning</option>
+        <option>Morning</option>
+        <option>Afternoon</option>
+        <option>Evening</option>
+        <option>Night</option>
+        <option>Late_Night</option>
+      </select>
+
+      <label for="arrival_time">Arrival Time:</label>
+      <select id="arrival_time">
+        <option>Early_Morning</option>
+        <option>Morning</option>
+        <option>Afternoon</option>
+        <option>Evening</option>
+        <option>Night</option>
+        <option>Late_Night</option>
+      </select>
+
+      <label for="departure_date">Departure Date:</label>
+      <input type="date" id="departure_date" required />
+
+      <div style="display: flex; justify-content: space-between; gap: 10px;">
+        <button type="submit" class="predict-btn">Predict</button>
+        <button type="button" class="reset-btn" onclick="resetForm()">Reset</button>
+      </div>
+    </form>
+
+    <div class="spinner" id="spinner"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById("predictForm");
+    const toast = document.getElementById("toast");
+    const spinner = document.getElementById("spinner");
+    const priceValue = document.getElementById("priceValue");
+    const toggleBtn = document.getElementById("toggleDark");
+
+    // Dark mode toggle
+    toggleBtn.addEventListener("click", () => {
+      document.body.classList.toggle("dark-mode");
+      toggleBtn.textContent = document.body.classList.contains("dark-mode") ? "☀️" : "🌙";
+    });
+
+    // Form submit
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      spinner.style.display = "block";
+
+      const data = {
+        airline: document.getElementById("airline").value,
+        source_city: document.getElementById("source_city").value,
+        destination_city: document.getElementById("destination_city").value,
+        class: document.getElementById("class").value,
+        stops: document.getElementById("stops").value,
+        departure_time: document.getElementById("departure_time").value,
+        arrival_time: document.getElementById("arrival_time").value,
+        departure_date: document.getElementById("departure_date").value,
+      };
+
+      fetch("/predict", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          spinner.style.display = "none";
+          if (data.prediction !== undefined) {
+            priceValue.textContent = data.prediction;
+            showToast();
+          } else {
+            alert("Error: " + data.error);
+          }
+        })
+        .catch((err) => {
+          spinner.style.display = "none";
+          alert("Server Error: Something went wrong.");
+          console.error(err);
+        });
+    });
+
+    function showToast() {
+      toast.style.display = "block";
+      setTimeout(() => {
+        toast.style.display = "none";
+      }, 4000);
+    }
+
+    function resetForm() {
+      form.reset();
+      toast.style.display = "none";
+    }
+  </script>
+</body>
+</html>
